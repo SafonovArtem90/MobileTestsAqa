@@ -5,7 +5,6 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import constants.Constants;
 import enums.FieldsEnum;
-import screens.login.LoginPage;
 import screens.login.SuccessLoginPage;
 import utils.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -29,23 +28,18 @@ import static utils.RegexUtils.isMatch;
 @Feature("Авторизация")
 public class LoginTest extends BaseAndroidTest {
 
-    private LoginPage loginPage = createLoginPage.get();
-    private SuccessLoginPage successLoginPage = createSuccessPage.get();
-
     @Test
     @DisplayName("Успешный логин в приложение.")
     @Tags(@Tag("ANDROID"))
     public void checkSuccessLoginTest() {
         loginPage
-                .checkTvTittleIsVisible()
                 .checkShowPasswordIconIsVisible()
                 .checkStatusShowPasswordIcon(false)
                 .enterLogin(Constants.VALID_LOGIN)
                 .enterPassword(Constants.VALID_PASSWORD)
                 .checkIsHiddenPasswordInput(true)
                 .clickLoginButton();
-        successLoginPage
-                .checkSuccessLoginLabelIsVisible();
+        new SuccessLoginPage();
     }
 
     @ParameterizedTest(name = "Ввод в поле Логин не валидного значения: {0}.")
@@ -54,7 +48,6 @@ public class LoginTest extends BaseAndroidTest {
     @MethodSource("valuesOfLoginField")
     public void checkValidationLoginFieldTest(String login) {
         loginPage
-                .checkTvTittleIsVisible()
                 .checkShowPasswordIconIsVisible()
                 .checkStatusShowPasswordIcon(false)
                 .enterLogin(login);
@@ -69,7 +62,6 @@ public class LoginTest extends BaseAndroidTest {
     @MethodSource("valuesOfPasswordField")
     public void checkValidationPasswordFieldTest(String password, String errorText) {
         loginPage
-                .checkTvTittleIsVisible()
                 .checkShowPasswordIconIsVisible()
                 .checkStatusShowPasswordIcon(false)
                 .enterLogin(Constants.VALID_LOGIN)
@@ -86,7 +78,6 @@ public class LoginTest extends BaseAndroidTest {
     @MethodSource("failValuesOfAuthorize")
     public void checkFailLoginTest(String login, String password) {
         loginPage
-                .checkTvTittleIsVisible()
                 .checkShowPasswordIconIsVisible()
                 .checkStatusShowPasswordIcon(false)
                 .enterLogin(login)
@@ -104,7 +95,6 @@ public class LoginTest extends BaseAndroidTest {
     @Tags(@Tag("ANDROID"))
     public void checkViewHiddenAndVisiblePasswordTest() {
         loginPage
-                .checkTvTittleIsVisible()
                 .checkShowPasswordIconIsVisible()
                 .checkStatusShowPasswordIcon(false)
                 .enterPassword(Constants.VALID_PASSWORD)
@@ -121,7 +111,6 @@ public class LoginTest extends BaseAndroidTest {
     public void checkRemoveInvalidSymbolsWithPastValueTest(String field, String value, String regex) {
         String expectValue = null;
         loginPage
-                .checkTvTittleIsVisible()
                 .checkShowPasswordIconIsVisible()
                 .checkStatusShowPasswordIcon(false);
 

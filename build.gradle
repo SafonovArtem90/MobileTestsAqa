@@ -38,6 +38,8 @@ dependencies {
     testImplementation "org.slf4j:slf4j-simple:2.0.12"
 }
 
+test.dependsOn checkstyleTest
+
 test {
     useJUnitPlatform()
     ignoreFailures = true
@@ -50,6 +52,6 @@ allure {
 checkstyle {
     toolVersion = "10.12.4"
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
-    ignoreFailures = true
+    ignoreFailures = false
     maxWarnings = 0
 }

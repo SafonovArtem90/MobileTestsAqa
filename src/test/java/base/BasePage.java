@@ -8,7 +8,7 @@ import utils.WaitUtils;
 
 import java.time.Duration;
 
-public abstract class BasePage {
+    public abstract class BasePage implements Loadable {
 
     protected WaitUtils waitUtils;
     protected utils.ElementActions elementActions;
@@ -20,5 +20,13 @@ public abstract class BasePage {
         this.waitUtils = new WaitUtils(DriverManager.getDriver(), Integer.parseInt(ConfigLoader.getProperty("explicit.wait")));
         this.elementActions = new utils.ElementActions(waitUtils, DriverManager.getDriver());
         this.deviceActions = new utils.DeviceActions(DriverManager.getDriver());
+        isLoaded();
     }
+
+    @Override
+    public void isLoaded() {
+        checkPageLoaded();
+    }
+
+    protected abstract void checkPageLoaded();
 }
