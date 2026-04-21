@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'io.qameta.allure' version '3.2.0'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+def appiumVersion = '10.0.0'
+def junitVersion = '5.10.3'
+def allureVersion = '2.25.0'
+def assertjVersion = '3.27.7'
+def lombokVersion = '1.18.30'
+
+dependencies {
+    // --- Appium ---
+    testImplementation "io.appium:java-client:$appiumVersion"
+
+    // --- JUnit 5 ---
+    testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+
+    // --- Allure ---
+    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+    testImplementation "io.qameta.allure:allure-junit5"
+
+    // --- AssertJ ---
+    testImplementation "org.assertj:assertj-core:$assertjVersion"
+
+    // --- Lombok ---
+    testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+    testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+    testImplementation "org.slf4j:slf4j-simple:2.0.12"
+}
+
+test {
+    useJUnitPlatform()
+    ignoreFailures = true
+}
+
+allure {
+    version = allureVersion
+}
+
+checkstyle {
+    toolVersion = "10.12.4"
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    ignoreFailures = true
+    maxWarnings = 0
+}
