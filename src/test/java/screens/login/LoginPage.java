@@ -32,6 +32,12 @@ public class LoginPage extends BasePage {
     @AndroidFindBy(id = "anyIdFromInvalidValue")
     private WebElement errorTextToPasswordField;
 
+    @Override
+    @Step("Проверка отображения заголовка окна Login")
+    protected void checkPageLoaded() {
+        elementActions.isElementIsVisible(loginTvTitle);
+    }
+
     @Step("Ввод логина: {login}")
     public LoginPage enterLogin(String login) {
         elementActions.typeTextIntoInputField(loginInput, login);
@@ -49,12 +55,6 @@ public class LoginPage extends BasePage {
     @Step("Нажатие на кнопку Вход")
     public void clickLoginButton() {
         elementActions.clickOnElement(confirmButton);
-    }
-
-    @Step("Проверка отображения заголовка окна Login")
-    public LoginPage checkTvTittleIsVisible() {
-        elementActions.isElementIsVisible(loginTvTitle);
-        return this;
     }
 
     @Step("Получение текста заголовка окна Login")

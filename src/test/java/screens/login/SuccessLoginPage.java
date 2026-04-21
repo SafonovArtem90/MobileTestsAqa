@@ -10,9 +10,9 @@ public class SuccessLoginPage extends BasePage {
     @AndroidFindBy(xpath = "//android.widget.TextView[@text='Вход в Alfa-Test выполнен']")
     private WebElement successLoginLabel;
 
-    @Step("Проверка отображения элемента")
-    public SuccessLoginPage checkSuccessLoginLabelIsVisible() {
+    @Override
+    @Step("Проверка отображения заголовка окна SuccessLogin")
+    protected void checkPageLoaded() {
         elementActions.isElementIsVisible(successLoginLabel);
-        return this;
     }
 }
