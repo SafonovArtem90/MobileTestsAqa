@@ -8,7 +8,7 @@ import utils.WaitUtils;
 
 import java.time.Duration;
 
-    public abstract class BasePage implements Loadable {
+public abstract class BasePage implements Loadable {
 
     protected WaitUtils waitUtils;
     protected utils.ElementActions elementActions;

@@ -6,8 +6,6 @@ import io.appium.java_client.service.local.flags.GeneralServerFlag;
 import lombok.extern.slf4j.Slf4j;
 import config.ConfigLoader;
 
-import java.net.URL;
-
 @Slf4j
 public class AppiumServerManager {
 
@@ -30,17 +28,6 @@ public class AppiumServerManager {
         if (service != null && service.isRunning()) {
             service.stop();
             log.info("Appium Server остановлен");
-        }
-    }
-
-    public static URL getServiceUrl() {
-        if (service != null) {
-            return service.getUrl();
-        }
-        try {
-            return new URL("http://" + ConfigLoader.getProperty("appium.server.ip") + ":" + ConfigLoader.getProperty("appium.server.port"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 }
