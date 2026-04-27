@@ -31,6 +31,10 @@ public class ElementActions {
         waitUtils.waitElementIsVisible(element);
     }
 
+    public void isElementNotVisible(WebElement element) {
+        waitUtils.waitElementNotVisible(element);
+    }
+
     public String getTextOnElement(WebElement element) {
         isElementIsVisible(element);
         return element.getText();

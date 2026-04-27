@@ -6,14 +6,13 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.OutputType;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 import static managers.DriverManager.getDriver;
 
 public class AfterTestExtension implements AfterTestExecutionCallback {
 
     @Override
-    public void afterTestExecution(ExtensionContext context) throws IOException {
+    public void afterTestExecution(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) {
             takeScreenshot();
         }

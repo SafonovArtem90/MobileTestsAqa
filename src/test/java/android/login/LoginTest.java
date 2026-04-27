@@ -150,7 +150,8 @@ public class LoginTest extends BaseAndroidTest {
     static Stream<Arguments> valuesOfLoginField() {
         return Stream.of(
                 Arguments.of("tri"),
-                Arguments.of("user#123"),
+                Arguments.of("user#"),
+                Arguments.of("USER123"),
                 Arguments.of("iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIO"),
                 Arguments.of("Артем"),
                 Arguments.of("23456"),
