@@ -1,0 +1,21 @@
+# Единый формат файлов проекта (IntelliJ IDEA подхватывает этот файл автоматически)
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Java-нативный Properties читает свойства как ISO-8859-1, но комментарии
+# у нас на русском — IDEA должна открывать файлы как UTF-8, иначе видна "кракозябра"
+[*.properties]
+charset = utf-8
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.{gradle,groovy}]
+indent_size = 4

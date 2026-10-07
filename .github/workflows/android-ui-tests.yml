@@ -1,0 +1,93 @@
+name: Android UI tests
+
+on:
+  # Только ручной запуск: Actions → Android UI tests → Run workflow
+  workflow_dispatch:
+    inputs:
+      include_tags:
+        description: "Теги JUnit через запятую (пусто — все тесты)"
+        required: false
+        default: ""
+      branch:
+        description: "Ветка для запуска (например, refactoring)"
+        required: true
+        default: "refactoring"
+
+concurrency:
+  group: android-ui-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ui-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: https://safonovartem90.github.io/MobileTestsAqa/
+    env:
+      APP_DOWNLOAD_URL: ${{ secrets.APP_DOWNLOAD_URL }}
+
+    steps:
+      - name: Получение кода
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      # Эмулятору в Docker нужен доступ к /dev/kvm
+      - name: Включение KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Необязательно: если APK не хранится в репозитории, задайте секрет APP_DOWNLOAD_URL
+      - name: Загрузка APK
+        if: env.APP_DOWNLOAD_URL != ''
+        run: |
+          mkdir -p src/test/resources/apps
+          curl -fsSL -o src/test/resources/apps/app-debug.apk "$APP_DOWNLOAD_URL"
+
+      - name: Запуск тестов в Docker
+        env:
+          TEST_USER_LOGIN: ${{ secrets.TEST_USER_LOGIN }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          INCLUDE_TAGS: ${{ github.event.inputs.include_tags }}
+        run: docker compose up --build --exit-code-from tests --abort-on-container-exit
+
+      - name: Логи эмулятора при падении
+        if: failure()
+        run: docker compose logs emulator --tail 200
+
+      - name: Остановка контейнеров
+        if: always()
+        run: docker compose down -v
+
+      - name: Установка JDK для отчёта Allure
+        if: always()
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Генерация отчёта Allure
+        if: always()
+        run: |
+          mkdir -p build
+          sudo chown -R "$(id -u):$(id -g)" build
+          ./gradlew allureReport --no-daemon
+
+      - name: Сохранение отчёта Allure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: build/reports/allure-report
+          retention-days: 14
+
+      - name: Публикация отчёта Allure на GitHub Pages
+        if: hashFiles('build/reports/allure-report/index.html') != ''
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/reports/allure-report
+          publish_branch: gh-pages

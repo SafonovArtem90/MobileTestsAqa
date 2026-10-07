@@ -4,8 +4,8 @@ plugins {
     id 'io.qameta.allure' version '3.2.0'
 }
 
-group 'org.example'
-version '1.0-SNAPSHOT'
+group = 'org.example'
+version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -16,13 +16,17 @@ def junitVersion = '5.10.3'
 def allureVersion = '2.25.0'
 def assertjVersion = '3.27.7'
 def lombokVersion = '1.18.30'
+def slf4jVersion = '2.0.12'
 
 dependencies {
     // --- Appium ---
     testImplementation "io.appium:java-client:$appiumVersion"
 
     // --- JUnit 5 ---
-    testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+    testImplementation platform("org.junit:junit-bom:$junitVersion")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    // Gradle 9 не добавляет лаунчер автоматически
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
     // --- Allure ---
     testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
@@ -35,14 +39,64 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:$lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-    testImplementation "org.slf4j:slf4j-simple:2.0.12"
+    testImplementation "org.slf4j:slf4j-simple:$slf4jVersion"
 }
 
-test.dependsOn checkstyleTest
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+    // Имена параметров нужны Allure для подстановки {login} в @Step
+    options.compilerArgs << '-parameters'
+}
+
+// Префиксы настроек, которые передаются из -D в JVM с тестами
+def forwardedPropertyPrefixes = ['env', 'appium.', 'devices.', 'app.', 'platform.', 'explicit.', 'test.']
+
+def envOrNull = { String name ->
+    def value = System.getenv(name)
+    return value?.trim() ? value.trim() : null
+}
 
 test {
-    useJUnitPlatform()
-    ignoreFailures = true
+    dependsOn checkstyleTest
+
+    // Фильтр по тегам: -PincludeTags=ANDROID или INCLUDE_TAGS=ANDROID
+    def tagsToInclude = project.findProperty('includeTags') ?: envOrNull('INCLUDE_TAGS')
+    def tagsToExclude = project.findProperty('excludeTags') ?: envOrNull('EXCLUDE_TAGS')
+    useJUnitPlatform {
+        if (tagsToInclude) {
+            includeTags(*tagsToInclude.toString().split(',')*.trim())
+        }
+        if (tagsToExclude) {
+            excludeTags(*tagsToExclude.toString().split(',')*.trim())
+        }
+    }
+
+    // Падение тестов должно ронять сборку, иначе CI покажет зелёный результат
+    ignoreFailures = false
+
+    // Потоков не больше, чем устройств: -Pthreads=N, THREADS=N или по числу DEVICES_UDIDS
+    def devicesFromEnv = envOrNull('DEVICES_UDIDS')
+    def threads = project.findProperty('threads')
+            ?: envOrNull('THREADS')
+            ?: (devicesFromEnv ? devicesFromEnv.split(',').findAll { it.trim() }.size() : 1)
+    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', threads.toString()
+
+    System.properties.each { key, value ->
+        if (forwardedPropertyPrefixes.any { key.toString().startsWith(it) }) {
+            systemProperty key.toString(), value
+        }
+    }
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+        // Показывать System.out/System.err тестов в логах CI (нужно для диагностики)
+        showStandardStreams = true
+    }
+
+    // Тесты зависят от устройства, а не только от кода — не берём результат из кеша
+    outputs.upToDateWhen { false }
 }
 
 allure {

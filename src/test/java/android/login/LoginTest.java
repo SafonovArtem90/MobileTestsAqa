@@ -1,168 +1,157 @@
 package android.login;
 
 import base.BaseAndroidTest;
+import config.TestConfig;
+import enums.FieldsEnum;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import constants.Constants;
-import enums.FieldsEnum;
-import screens.login.SuccessLoginPage;
-import utils.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import screens.login.LoginPage;
+import screens.login.SuccessLoginPage;
 
+import java.util.Locale;
 import java.util.stream.Stream;
 
+import static constants.Constants.ERROR_LOGIN_INVALID_SYMBOLS;
+import static constants.Constants.ERROR_LOGIN_OR_PASSWORD_TEXT;
 import static constants.Constants.ERROR_PASSWORD_MAX_LENGTH;
 import static constants.Constants.ERROR_PASSWORD_MIN_LENGTH;
 import static constants.Constants.REGEX_LOGIN;
 import static constants.Constants.REGEX_PASSWORD;
-import static utils.Assertions.assertTextEqual;
-import static utils.RegexUtils.isMatch;
+import static constants.Constants.SUCCESS_LOGIN_TEXT;
+import static utils.Assertions.assertMatchesRegex;
+import static utils.Assertions.assertTextEquals;
 
 @Epic("Мобильное приложение")
 @Feature("Авторизация")
 public class LoginTest extends BaseAndroidTest {
 
+    private static final String LONG_VALUE_51_CHARS = "iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIO";
+
+    private LoginPage loginPage;
+
+    @BeforeEach
+    public void openLoginPage() {
+        loginPage = new LoginPage();
+        loginPage.waitShowPasswordIconVisible();
+        loginPage.waitShowPasswordIconChecked(false);
+    }
+
     @Test
-    @DisplayName("Успешный логин в приложение.")
-    @Tags(@Tag("ANDROID"))
+    @DisplayName("Успешный вход в приложение")
     public void checkSuccessLoginTest() {
-        loginPage
-                .checkShowPasswordIconIsVisible()
-                .checkStatusShowPasswordIcon(false)
-                .enterLogin(Constants.VALID_LOGIN)
-                .enterPassword(Constants.VALID_PASSWORD)
-                .checkIsHiddenPasswordInput(true)
-                .clickLoginButton();
-        new SuccessLoginPage();
+        loginPage.enterLogin(TestConfig.getUserLogin());
+        loginPage.enterPassword(TestConfig.getUserPassword());
+        loginPage.waitPasswordHidden(true);
+        loginPage.clickLoginButton();
+
+        SuccessLoginPage successLoginPage = new SuccessLoginPage();
+        assertTextEquals(successLoginPage.getSuccessText(), SUCCESS_LOGIN_TEXT);
     }
 
-    @ParameterizedTest(name = "Ввод в поле Логин не валидного значения: {0}.")
-    @DisplayName("Проверка валидации поля Логин.")
-    @Tags(@Tag("ANDROID"))
-    @MethodSource("valuesOfLoginField")
+    @ParameterizedTest(name = "Невалидный логин: «{0}»")
+    @DisplayName("Валидация поля Логин")
+    @MethodSource("invalidLogins")
     public void checkValidationLoginFieldTest(String login) {
-        loginPage
-                .checkShowPasswordIconIsVisible()
-                .checkStatusShowPasswordIcon(false)
-                .enterLogin(login);
+        loginPage.enterLogin(login);
 
-        assertTextEqual(Constants.ERROR_LOGIN_ENTER_TEXT,
-                        loginPage.getErrorLoginFieldText());
+        assertTextEquals(loginPage.getLoginFieldErrorText(), ERROR_LOGIN_INVALID_SYMBOLS);
     }
 
-    @ParameterizedTest(name = "Ввод в поле Пароль не валидного значения: {0} с ож.ошибкой: {1}.")
-    @DisplayName("Проверка валидации поля Пароль.")
-    @Tags(@Tag("ANDROID"))
-    @MethodSource("valuesOfPasswordField")
-    public void checkValidationPasswordFieldTest(String password, String errorText) {
-        loginPage
-                .checkShowPasswordIconIsVisible()
-                .checkStatusShowPasswordIcon(false)
-                .enterLogin(Constants.VALID_LOGIN)
-                .enterPassword(password)
-                .checkIsHiddenPasswordInput(true);
+    @ParameterizedTest(name = "Невалидный пароль длиной {0} символов, ошибка: «{2}»")
+    @DisplayName("Валидация длины поля Пароль")
+    @MethodSource("invalidPasswords")
+    public void checkValidationPasswordFieldTest(int length, String password, String expectedError) {
+        loginPage.enterLogin(TestConfig.getUserLogin());
+        loginPage.enterPassword(password);
+        loginPage.waitPasswordHidden(true);
 
-        assertTextEqual(errorText,
-                        loginPage.getErrorPasswordFieldText());
+        assertTextEquals(loginPage.getPasswordFieldErrorText(), expectedError);
     }
 
-    @ParameterizedTest(name = "Ввод Логин: {0} и Пароль: {1}.")
-    @DisplayName("Проверка отображения ошибки при нажатии Войти с неверным вводом Логин или Пароль.")
-    @Tags(@Tag("ANDROID"))
-    @MethodSource("failValuesOfAuthorize")
-    public void checkFailLoginTest(String login, String password) {
-        loginPage
-                .checkShowPasswordIconIsVisible()
-                .checkStatusShowPasswordIcon(false)
-                .enterLogin(login)
-                .enterPassword(password)
-                .checkIsHiddenPasswordInput(true)
-                .clickLoginButton();
-        loginPage.checkErrorTextIsVisible();
+    @ParameterizedTest(name = "Неверная пара логин/пароль: {0}")
+    @DisplayName("Ошибка при входе с неверными учётными данными")
+    @MethodSource("invalidCredentials")
+    public void checkFailLoginTest(String caseName, String login, String password) {
+        loginPage.enterLogin(login);
+        loginPage.enterPassword(password);
+        loginPage.waitPasswordHidden(true);
+        loginPage.clickLoginButton();
 
-        assertTextEqual(Constants.ERROR_LOGIN_OR_PASSWORD_ENTER_TEXT,
-                        loginPage.getErrorAfterSubmitErrorText());
+        assertTextEquals(loginPage.getErrorAfterSubmitText(), ERROR_LOGIN_OR_PASSWORD_TEXT);
     }
 
     @Test
-    @DisplayName("Проверка отображения '*' и видимого значения для поля Пароль.")
-    @Tags(@Tag("ANDROID"))
+    @DisplayName("Скрытие и отображение значения поля Пароль")
     public void checkViewHiddenAndVisiblePasswordTest() {
-        loginPage
-                .checkShowPasswordIconIsVisible()
-                .checkStatusShowPasswordIcon(false)
-                .enterPassword(Constants.VALID_PASSWORD)
-                .checkIsHiddenPasswordInput(true)
-                .clickShowPasswordIconButton()
-                .checkIsHiddenPasswordInput(false)
-                .checkStatusShowPasswordIcon(true);
+        loginPage.enterPassword(TestConfig.getUserPassword());
+        loginPage.waitPasswordHidden(true);
+
+        loginPage.clickShowPasswordIcon();
+
+        loginPage.waitPasswordHidden(false);
+        loginPage.waitShowPasswordIconChecked(true);
     }
 
-    @ParameterizedTest(name = "Ввод в поле {0} значения {1}")
-    @DisplayName("Проверка обрезания недопустимых символов после вставки из буфера.")
-    @Tags(@Tag("ANDROID"))
-    @MethodSource("listValuesForRemoveInvalidCharacter")
-    public void checkRemoveInvalidSymbolsWithPastValueTest(String field, String value, String regex) {
-        String expectValue = null;
-        loginPage
-                .checkShowPasswordIconIsVisible()
-                .checkStatusShowPasswordIcon(false);
+    @ParameterizedTest(name = "Поле {0}: вставка значения «{1}»")
+    @DisplayName("Удаление недопустимых символов после вставки из буфера обмена")
+    @MethodSource("valuesWithInvalidCharacters")
+    public void checkRemoveInvalidSymbolsAfterPasteTest(FieldsEnum field, String value, String regex) {
+        String actualValue = switch (field) {
+            case LOGIN -> {
+                loginPage.pasteLogin(value);
+                yield loginPage.getLoginValue();
+            }
+            case PASSWORD -> {
+                loginPage.pastePassword(value);
+                yield loginPage.getPasswordValue();
+            }
+        };
 
-        if (field.equals(FieldsEnum.PASSWORD.getName())) {
-            expectValue = loginPage
-                    .enterPasswordViaClipboard(value)
-                    .getInputFieldTextFromPassword();
-        } else if (field.equals(FieldsEnum.LOGIN.getName())) {
-            expectValue = loginPage
-                    .enterLoginViaClipboard(value)
-                    .getInputFieldTextFromLogin();
-        }
-
-        Assertions.assertTrue(isMatch(expectValue, regex), String.format("Исправленное значение '%s' не соответствует REGEX('%s') поля.",
-                                                                         expectValue, regex));
+        assertMatchesRegex(actualValue, regex);
     }
 
-    static Stream<Arguments> listValuesForRemoveInvalidCharacter() {
+    static Stream<Arguments> valuesWithInvalidCharacters() {
         return Stream.of(
-                Arguments.of(FieldsEnum.PASSWORD.getName(), "iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIO", REGEX_PASSWORD),
-                Arguments.of(FieldsEnum.PASSWORD.getName(), "      iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI    ", REGEX_PASSWORD),
-                Arguments.of(FieldsEnum.LOGIN.getName(), "user#123", REGEX_LOGIN),
-                Arguments.of(FieldsEnum.LOGIN.getName(), "iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIO", REGEX_LOGIN),
-                Arguments.of(FieldsEnum.LOGIN.getName(), "Артем", REGEX_LOGIN),
-                Arguments.of(FieldsEnum.LOGIN.getName(), "     sdfsd sdfsd_,.sdfsd", REGEX_LOGIN),
-                Arguments.of(FieldsEnum.LOGIN.getName(), "sdfsd .,/'_- sdf     ", REGEX_LOGIN)
+                Arguments.of(FieldsEnum.PASSWORD, LONG_VALUE_51_CHARS, REGEX_PASSWORD),
+                Arguments.of(FieldsEnum.PASSWORD, "      " + LONG_VALUE_51_CHARS + "    ", REGEX_PASSWORD),
+                Arguments.of(FieldsEnum.LOGIN, "user#123", REGEX_LOGIN),
+                Arguments.of(FieldsEnum.LOGIN, LONG_VALUE_51_CHARS, REGEX_LOGIN),
+                Arguments.of(FieldsEnum.LOGIN, "Артем", REGEX_LOGIN),
+                Arguments.of(FieldsEnum.LOGIN, "     sdfsd sdfsd_,.sdfsd", REGEX_LOGIN),
+                Arguments.of(FieldsEnum.LOGIN, "sdfsd .,/'_- sdf     ", REGEX_LOGIN)
         );
     }
 
-    static Stream<Arguments> valuesOfPasswordField() {
+    static Stream<Arguments> invalidPasswords() {
         return Stream.of(
-                Arguments.of("tri", ERROR_PASSWORD_MIN_LENGTH),
-                Arguments.of("iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIO", ERROR_PASSWORD_MAX_LENGTH)
+                Arguments.of(3, "tri", ERROR_PASSWORD_MIN_LENGTH),
+                Arguments.of(51, LONG_VALUE_51_CHARS, ERROR_PASSWORD_MAX_LENGTH)
         );
     }
 
-    static Stream<Arguments> valuesOfLoginField() {
+    static Stream<Arguments> invalidLogins() {
         return Stream.of(
                 Arguments.of("tri"),
-                Arguments.of("user#123"),
-                Arguments.of("iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIO"),
+                Arguments.of("user#"),
+                Arguments.of("USER123"),
+                Arguments.of(LONG_VALUE_51_CHARS),
                 Arguments.of("Артем"),
                 Arguments.of("23456"),
                 Arguments.of("")
         );
     }
 
-    static Stream<Arguments> failValuesOfAuthorize() {
+    static Stream<Arguments> invalidCredentials() {
         return Stream.of(
-                Arguments.of("Login", "password"),
-                Arguments.of("login", "Password"),
-                Arguments.of("Fail", "Failss")
+                Arguments.of("пароль в нижнем регистре", TestConfig.getUserLogin(), TestConfig.getUserPassword().toLowerCase(Locale.ROOT)),
+                Arguments.of("логин в нижнем регистре", TestConfig.getUserLogin().toLowerCase(Locale.ROOT), TestConfig.getUserPassword()),
+                Arguments.of("оба значения неверные", "Fail", "Failss")
         );
     }
 }

@@ -1,28 +1,29 @@
 package base;
 
-import extensions.AfterTestExtension;
-import extensions.TestExtension;
+import extensions.AppiumServerExtension;
+import extensions.FailureAttachmentsExtension;
 import managers.DriverManager;
-import screens.login.LoginPage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith({TestExtension.class,
-             AfterTestExtension.class})
+/**
+ * Базовый тест: сессия Appium создаётся перед каждым тестом и закрывается после.
+ * Конкретные экраны создаются в тестовых классах.
+ */
+@Tag("ANDROID")
+@ExtendWith({AppiumServerExtension.class,
+             FailureAttachmentsExtension.class})
 public abstract class BaseAndroidTest {
 
-    protected LoginPage loginPage;
-
     @BeforeEach
-    public void setUp() {
+    public void startSession() {
         DriverManager.getDriver();
-        loginPage = new LoginPage();
     }
 
     @AfterEach
-    public void cleanUp() {
+    public void closeSession() {
         DriverManager.quitDriver();
     }
-
 }

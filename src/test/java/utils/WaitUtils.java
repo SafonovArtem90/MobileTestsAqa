@@ -8,14 +8,19 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 
 public class WaitUtils {
+
     private final WebDriverWait wait;
 
-    public WaitUtils(AndroidDriver driver, int timeoutSeconds) {
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds));
+    public WaitUtils(AndroidDriver driver, Duration timeout) {
+        this.wait = new WebDriverWait(driver, timeout);
     }
 
     public void waitElementIsVisible(WebElement element) {
         wait.until(ExpectedConditions.visibilityOf(element));
+    }
+
+    public void waitElementNotVisible(WebElement element) {
+        wait.until(ExpectedConditions.invisibilityOf(element));
     }
 
     public void waitElementIsClickable(WebElement element) {
