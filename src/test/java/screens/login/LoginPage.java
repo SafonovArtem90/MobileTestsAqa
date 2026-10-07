@@ -29,11 +29,9 @@ public class LoginPage extends BasePage {
     @AndroidFindBy(id = "com.alfabank.qapp:id/tvError")
     private WebElement errorAfterSubmit;
 
-    // Локатор временный: уточнить id ошибки под полем Логин в приложении.
     @AndroidFindBy(id = "com.alfabank.qapp:id/anyIdFromInvalidValue")
     private WebElement loginFieldError;
 
-    // Локатор временный: уточнить id ошибки под полем Пароль в приложении.
     @AndroidFindBy(id = "com.alfabank.qapp:id/anyIdFromInvalidValue")
     private WebElement passwordFieldError;
 
