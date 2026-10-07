@@ -3,6 +3,7 @@ package base;
 import extensions.AppiumServerExtension;
 import extensions.FailureAttachmentsExtension;
 import managers.DriverManager;
+import managers.app.AppManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,5 +21,10 @@ public abstract class BaseAndroidTest {
     @BeforeEach
     public void startSession() {
         DriverManager.getDriver();
+    }
+
+    @BeforeEach
+    public void restartApp() {
+        AppManager.resetApp(DriverManager.getDriver());
     }
 }

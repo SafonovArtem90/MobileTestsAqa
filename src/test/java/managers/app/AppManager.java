@@ -40,19 +40,47 @@ public final class AppManager {
             // 2. Чистим данные и кэш через Appium
             driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
             // 3. Дублируем через adb pm clear — заодно сбрасываются выданные разрешения
-            clearAppDataViaAdb(appPackage, device);
+            clearAppDataViaAdb(appPackage, device.udid());
         }
         driver.activateApp(appPackage);
     }
 
-    private static void clearAppDataViaAdb(String appPackage, Device device) {
+    private static void clearAppDataViaAdb(String appPackage, String udid) {
         try {
-            Process process = new ProcessBuilder(
-                    "adb", "-s", device.udid(), "shell", "pm", "clear", appPackage).start();
+            List<String> cmd = new java.util.ArrayList<>();
+            cmd.add("adb");
+            if (udid != null && !udid.isBlank()) {
+                cmd.add("-s");
+                cmd.add(udid);
+            }
+            cmd.add("shell");
+            cmd.add("pm");
+            cmd.add("clear");
+            cmd.add(appPackage);
+            Process process = new ProcessBuilder(cmd).start();
             process.getInputStream().transferTo(System.out);
             process.waitFor();
         } catch (Exception e) {
             log.warn("Не удалось выполнить pm clear для {}", appPackage, e);
+        }
+    }
+
+    public static void resetApp(AndroidDriver driver) {
+        String appPackage = TestConfig.getAppPackage();
+        if (TestConfig.isAppResetBeforeTest()) {
+            driver.terminateApp(appPackage);
+            driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
+            clearAppDataViaAdb(appPackage, getUdid(driver));
+        }
+        driver.activateApp(appPackage);
+    }
+
+    private static String getUdid(AndroidDriver driver) {
+        try {
+            return (String) driver.getCapabilities().getCapability("udid");
+        } catch (Exception e) {
+            log.warn("Не удалось определить udid драйвера", e);
+            return "";
         }
     }
 
