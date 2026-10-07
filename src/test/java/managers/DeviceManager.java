@@ -72,14 +72,13 @@ public final class DeviceManager {
     private static List<String> queryAdb() {
         try {
             Process process = new ProcessBuilder("adb", "devices").start();
-            List<String> devices = process.getInputStream().readAllBytes()
-                                          .toString()
-                                          .lines()
-                                          .skip(1)
-                                          .map(line -> line.split("\\s+"))
-                                          .filter(parts -> parts.length == 2 && parts[1].equals("device"))
-                                          .map(parts -> parts[0])
-                                          .toList();
+            String output = new String(process.getInputStream().readAllBytes());
+            log.info("RAW adb devices:{}", output.replace("\r", "\\r").replace("\n", "\\n"));
+            List<String> devices = output.lines().skip(1)
+                                         .map(line -> line.split("\\s+"))
+                                         .filter(parts -> parts.length == 2 && parts[1].equals("device"))
+                                         .map(parts -> parts[0])
+                                         .toList();
             process.waitFor();
             return devices;
         } catch (Exception e) {
