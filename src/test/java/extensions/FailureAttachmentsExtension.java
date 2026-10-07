@@ -18,10 +18,14 @@ public class FailureAttachmentsExtension implements AfterTestExecutionCallback {
 
     @Override
     public void afterTestExecution(ExtensionContext context) {
-        if (context.getExecutionException().isEmpty()) {
-            return;
+        try {
+            if (context.getExecutionException().isPresent()) {
+                DriverManager.getDriverIfCreated().ifPresent(this::attachArtifacts);
+            }
+        } finally {
+            // Закрываем сессию после обработки результата теста
+            DriverManager.quitDriver();
         }
-        DriverManager.getDriverIfCreated().ifPresent(this::attachArtifacts);
     }
 
     private void attachArtifacts(AndroidDriver driver) {
