@@ -71,6 +71,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Подготовка истории прогонов
+        if: always()
+        run: |
+          mkdir -p build/allure-results
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
+          if git rev-parse --verify refs/remotes/origin/gh-pages >/dev/null 2>&1; then
+            git archive refs/remotes/origin/gh-pages history | tar -x -C build/allure-results || true
+          fi
+
       - name: Генерация отчёта Allure
         if: always()
         run: |
