@@ -64,7 +64,7 @@ jobs:
       - name: Генерация отчёта Allure
         if: always()
         run: |
-          mkdir -p build/allure-results
+          mkdir -p build
           sudo chown -R "$(id -u):$(id -g)" build
           ./gradlew allureReport --no-daemon
 

@@ -29,5 +29,7 @@ services:
       # Чтобы взять внешний файл, раскомментируйте APP_PATH и том ./apps ниже.
       # APP_PATH: /apps/app-debug.apk
     volumes:
-      - ./build/allure-results:/app/build/allure-results
+      # Монтируем build целиком: если маунтить только allure-results, Gradle не сможет
+      # удалить эту папку перед тестом (точка монтирования не удаляется).
+      - ./build:/app/build
       # - ./apps:/apps:ro
