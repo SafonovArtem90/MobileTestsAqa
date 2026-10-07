@@ -4,6 +4,8 @@ import config.TestConfig;
 import io.appium.java_client.android.AndroidDriver;
 import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
+import managers.Device;
+import managers.DeviceManager;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -34,10 +36,30 @@ public final class AppManager {
         }
 
         if (TestConfig.isAppResetBeforeTest()) {
+            // 1. Закрываем приложение, если оно открыто (например, осталось с прошлого запуска)
             driver.terminateApp(appPackage);
+            // 2. Чистим данные и кэш через Appium
             driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
+            // 3. Дублируем через adb pm clear — заодно сбрасываются выданные разрешения
+            clearAppDataViaAdb(appPackage);
         }
         driver.activateApp(appPackage);
+    }
+
+    private static void clearAppDataViaAdb(String appPackage) {
+        try {
+            Device device = DeviceManager.getCurrentDevice();
+            List<String> cmd = new java.util.ArrayList<>(List.of("adb", "shell", "pm", "clear", appPackage));
+            if (device != null) {
+                cmd.add(1, "-s");
+                cmd.add(2, device.udid());
+            }
+            Process process = new ProcessBuilder(cmd).start();
+            process.getInputStream().transferTo(System.out);
+            process.waitFor();
+        } catch (Exception e) {
+            log.warn("Не удалось выполнить pm clear для {}", appPackage, e);
+        }
     }
 
     private static void installApp(AndroidDriver driver, String appPackage) {
