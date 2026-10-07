@@ -4,6 +4,8 @@ FROM eclipse-temurin:17-jdk-jammy
 
 ARG NODE_MAJOR=22
 ARG APPIUM_VERSION=2
+# Последний uiautomator2-драйвер требует Appium 3; для Appium 2 фиксируем ветку 4.x
+ARG UIAUTOMATOR2_VERSION=4.2.8
 ARG ANDROID_CMDLINE_TOOLS_VERSION=11076708
 ARG ANDROID_BUILD_TOOLS_VERSION=34.0.0
 
@@ -29,7 +31,7 @@ RUN mkdir -p "${ANDROID_HOME}/cmdline-tools" \
     && sdkmanager "platform-tools" "build-tools;${ANDROID_BUILD_TOOLS_VERSION}"
 
 RUN npm install -g "appium@${APPIUM_VERSION}" \
-    && appium driver install uiautomator2
+    && appium driver install "uiautomator2@${UIAUTOMATOR2_VERSION}"
 
 WORKDIR /app
 

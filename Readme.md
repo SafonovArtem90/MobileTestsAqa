@@ -9,7 +9,7 @@
 
 ## 📋 Требования для локального запуска
 * JDK 17 (`JAVA_HOME`).
-* Node.js и Appium 2.x: `npm install -g appium@2` и `appium driver install uiautomator2`.
+* Node.js и Appium 2.x: `npm install -g appium@2` и `appium driver install uiautomator2@4.2.8` (версия драйвера зафиксирована: свежие 5+ требуют Appium 3).
 * Android SDK (platform-tools, build-tools), запущенный эмулятор или подключённое устройство.
 * Appium Inspector (по желанию, для поиска локаторов).
 
