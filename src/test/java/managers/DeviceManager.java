@@ -73,7 +73,6 @@ public final class DeviceManager {
         try {
             Process process = new ProcessBuilder("adb", "devices").start();
             String output = new String(process.getInputStream().readAllBytes());
-            log.info("RAW adb devices:{}", output.replace("\r", "\\r").replace("\n", "\\n"));
             List<String> devices = output.lines().skip(1)
                                          .map(line -> line.split("\\s+"))
                                          .filter(parts -> parts.length == 2 && parts[1].equals("device"))
