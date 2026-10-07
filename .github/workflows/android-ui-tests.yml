@@ -1,14 +1,17 @@
 name: Android UI tests
 
 on:
+  # Только ручной запуск: Actions → Android UI tests → Run workflow
   workflow_dispatch:
     inputs:
       include_tags:
         description: "Теги JUnit через запятую (пусто — все тесты)"
         required: false
         default: ""
-  pull_request:
-    branches: [ main, master ]
+      branch:
+        description: "Ветка для запуска (например, refactoring)"
+        required: true
+        default: "refactoring"
 
 concurrency:
   group: android-ui-tests-${{ github.ref }}
@@ -18,12 +21,17 @@ jobs:
   ui-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: https://safonovartem90.github.io/MobileTestsAqa/
     env:
       APP_DOWNLOAD_URL: ${{ secrets.APP_DOWNLOAD_URL }}
 
     steps:
       - name: Получение кода
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
 
       # Эмулятору в Docker нужен доступ к /dev/kvm
       - name: Включение KVM
@@ -75,3 +83,11 @@ jobs:
           name: allure-report
           path: build/reports/allure-report
           retention-days: 14
+
+      - name: Публикация отчёта Allure на GitHub Pages
+        if: hashFiles('build/reports/allure-report/index.html') != ''
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/reports/allure-report
+          publish_branch: gh-pages
