@@ -67,14 +67,31 @@ docker compose up --build --exit-code-from tests --abort-on-container-exit
 * Внешнее устройство вместо эмулятора: `ADB_CONNECT=host:5555` и `DEVICES_UDIDS=host:5555`.
 
 ## ☁️ GitHub Actions
-Workflow: `.github/workflows/android-ui-tests.yml`. Запускается на pull request или вручную
-(Actions → Android UI tests → Run workflow).
+Workflow: `.github/workflows/android-ui-tests.yml`. Запускается вручную
+(Actions → Android UI tests → Run workflow) или при создании/переоткрытии PR в `master`.
 
 Секреты репозитория (Settings → Secrets and variables → Actions):
 * `TEST_USER_LOGIN`, `TEST_USER_PASSWORD` — обязательно;
 * `APP_DOWNLOAD_URL` — по желанию, если APK не хранится в репозитории.
 
-Отчёт Allure сохраняется в артефакте `allure-report`.
+Отчёт Allure сохраняется в артефакте `allure-report` и публикуется на GitHub Pages.
+
+### Ветки и варианты CI
+Сейчас в репозитории две версии CI:
+
+1. **`master` (и `optimize-ci`)** — ускоренный запуск на ubuntu-24.04:
+   Appium ставится напрямую через npm, эмулятор поднимается прямо на раннере
+   (`emulator -avd`), без нагрузки Docker-образа эмулятора и сборки образа тестов.
+   *Типичное время прогона: ~10–15 мин.*
+   Плюсы: нет скачивания образа эмулятора (~2 ГБ) и сборки образа тестов, быстрее работает Gradle-кэш.
+   Минусы: окружение Appium проще/более жёсткое, более чувствительно к изменениям образа раннера.
+
+2. **`refactoring`** — классический вариант на Docker Compose
+   (`emulator: budtmo/docker-android`, `tests` собирается из `Dockerfile`).
+   *Типичное время прогона: ~15–20 мин.*
+   Плюсы: максимально стабильное, повторяемое окружение, всё определяется `docker-compose.yml`
+   и `Dockerfile`. Минусы: каждый запуск тащит образ эмулятора (~2 ГБ) и строит образ тестов,
+   прогон медленнее.
 
 ## 📁 Структура проекта
 * `src/test/java/config` — чтение настроек (`ConfigLoader`, `TestConfig`).
