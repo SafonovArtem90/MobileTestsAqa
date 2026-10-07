@@ -71,6 +71,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Подготовка истории прогонов
+        if: always()
+        run: |
+          mkdir -p build/allure-results
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
+          if git rev-parse --verify refs/remotes/origin/gh-pages >/dev/null 2>&1; then
+            git archive refs/remotes/origin/gh-pages history | tar -x -C build/allure-results || true
+          fi
+
       - name: Генерация отчёта Allure
         if: always()
         run: |
@@ -83,15 +92,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: build/reports/allure-report
+          path: build/reports/allure-report/allureReport
           retention-days: 14
 
       - name: Публикация отчёта Allure на GitHub Pages
-        if: hashFiles('build/reports/allure-report/index.html') != ''
+        if: hashFiles('build/reports/allure-report/allureReport/index.html') != ''
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/reports/allure-report
+          publish_dir: ./build/reports/allure-report/allureReport
           publish_branch: gh-pages
 
       - name: Ссылка на отчёт
