@@ -75,11 +75,22 @@ test {
     // Падение тестов должно ронять сборку, иначе CI покажет зелёный результат
     ignoreFailures = false
 
-    // Потоков не больше, чем устройств: -Pthreads=N, THREADS=N или по числу DEVICES_UDIDS
+    // Потоков не больше, чем реально подключённых устройств: -Pthreads=N, THREADS=N
+    // или по числу устройств, которые видит adb (fallback: по числу DEVICES_UDIDS или 1).
     def devicesFromEnv = envOrNull('DEVICES_UDIDS')
+    def connectedDevices = {
+        try {
+            def output = new String(['adb', 'devices'].execute().text)
+            return output.readLines().drop(1).count { it.matches('.*\tdevice\\s*$') }
+        } catch (ignored) {
+            return 0
+        }
+    }()
     def threads = project.findProperty('threads')
             ?: envOrNull('THREADS')
-            ?: (devicesFromEnv ? devicesFromEnv.split(',').findAll { it.trim() }.size() : 1)
+            ?: (connectedDevices > 0
+                    ? connectedDevices
+                    : (devicesFromEnv ? devicesFromEnv.split(',').findAll { it.trim() }.size() : 1))
     systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', threads.toString()
 
     System.properties.each { key, value ->

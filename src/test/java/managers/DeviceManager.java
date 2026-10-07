@@ -20,15 +20,51 @@ public final class DeviceManager {
     private static final ThreadLocal<Device> CURRENT_DEVICE = new ThreadLocal<>();
 
     static {
-        List<String> udids = TestConfig.getDeviceUdids();
-        if (udids.isEmpty()) {
+        List<String> configured = TestConfig.getDeviceUdids();
+        if (configured.isEmpty()) {
             throw new IllegalStateException("Список устройств пуст: задайте devices.udids или DEVICES_UDIDS");
         }
+
+        List<String> connected = getConnectedDevices();
+        List<String> available = connected.stream().filter(configured::contains).toList();
+        if (available.isEmpty()) {
+            throw new IllegalStateException(String.format(
+                    "Ни одно из настроенных устройств не подключено. Настроено: %s, подключено: %s", configured, connected));
+        }
+        if (available.size() < configured.size()) {
+            log.warn("Пропущены устройства из конфига (не подключены): {}",
+                     configured.stream().filter(d -> !connected.contains(d)).toList());
+        }
+
         int port = TestConfig.getSystemPortStart();
-        for (String udid : udids) {
+        for (String udid : available) {
             DEVICES.add(new Device(udid, port++));
         }
         log.info("Пул устройств для запуска: {}", DEVICES);
+    }
+
+    /**
+     * Список устройств, с которыми установлено соединение (статус device в adb).
+     * Если adb недоступен — используется полный список из конфига (поведение по умолчанию).
+     */
+    private static List<String> getConnectedDevices() {
+        try {
+            Process process = new ProcessBuilder("adb", "devices").start();
+            List<String> devices = process.getInputStream().readAllBytes()
+                                          .toString()
+                                          .lines()
+                                          .skip(1)
+                                          .map(line -> line.split("\\s+"))
+                                          .filter(parts -> parts.length == 2 && parts[1].equals("device"))
+                                          .map(parts -> parts[0])
+                                          .toList();
+            process.waitFor();
+            log.info("Подключённые устройства (adb): {}", devices);
+            return devices;
+        } catch (Exception e) {
+            log.warn("Не удалось получить список устройств через adb, используем список из конфига", e);
+            return TestConfig.getDeviceUdids();
+        }
     }
 
     private DeviceManager() {
