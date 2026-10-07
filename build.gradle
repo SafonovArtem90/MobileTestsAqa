@@ -111,9 +111,9 @@ test {
     outputs.upToDateWhen { false }
 
     retry {
-        // Повторять упавшие тесты, максимум 2 повторные попытки,
-        // успешное выполнение сразу останавливает ретраи
-        maxRetries = 2
+        // Ретраи сейчас выключены: maxRetries = 0.
+        // Настройку оставляем, чтобы быстро включить (поставить 2).
+        maxRetries = 0
         maxFailures = 100
         failOnPassedAfterRetry = false
     }
