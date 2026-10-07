@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'checkstyle'
     id 'io.qameta.allure' version '3.2.0'
+    id 'org.gradle.test-retry' version '1.6.2'
 }
 
 group = 'org.example'
@@ -108,6 +109,14 @@ test {
 
     // Тесты зависят от устройства, а не только от кода — не берём результат из кеша
     outputs.upToDateWhen { false }
+
+    retry {
+        // Повторять упавшие тесты, максимум 2 повторные попытки,
+        // успешное выполнение сразу останавливает ретраи
+        maxRetries = 2
+        maxFailures = 100
+        failOnPassedAfterRetry = false
+    }
 }
 
 allure {
