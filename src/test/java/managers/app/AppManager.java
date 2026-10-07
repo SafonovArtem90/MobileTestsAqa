@@ -5,7 +5,6 @@ import io.appium.java_client.android.AndroidDriver;
 import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import managers.Device;
-import managers.DeviceManager;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -27,7 +26,7 @@ public final class AppManager {
     }
 
     @Step("Подготовка приложения на устройстве")
-    public static void prepareApp(AndroidDriver driver) {
+    public static void prepareApp(AndroidDriver driver, Device device) {
         String appPackage = TestConfig.getAppPackage();
         if (driver.isAppInstalled(appPackage)) {
             log.info("Приложение {} уже установлено", appPackage);
@@ -41,20 +40,15 @@ public final class AppManager {
             // 2. Чистим данные и кэш через Appium
             driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
             // 3. Дублируем через adb pm clear — заодно сбрасываются выданные разрешения
-            clearAppDataViaAdb(appPackage);
+            clearAppDataViaAdb(appPackage, device);
         }
         driver.activateApp(appPackage);
     }
 
-    private static void clearAppDataViaAdb(String appPackage) {
+    private static void clearAppDataViaAdb(String appPackage, Device device) {
         try {
-            Device device = DeviceManager.getCurrentDevice();
-            List<String> cmd = new java.util.ArrayList<>(List.of("adb", "shell", "pm", "clear", appPackage));
-            if (device != null) {
-                cmd.add(1, "-s");
-                cmd.add(2, device.udid());
-            }
-            Process process = new ProcessBuilder(cmd).start();
+            Process process = new ProcessBuilder(
+                    "adb", "-s", device.udid(), "shell", "pm", "clear", appPackage).start();
             process.getInputStream().transferTo(System.out);
             process.waitFor();
         } catch (Exception e) {

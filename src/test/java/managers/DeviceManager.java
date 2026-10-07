@@ -112,13 +112,6 @@ public final class DeviceManager {
         }
     }
 
-    /**
-     * Устройство, закреплённое за текущим потоком (может быть null, если не взято).
-     */
-    public static Device getCurrentDevice() {
-        return CURRENT_DEVICE.get();
-    }
-
     public static void releaseDevice() {
         Device device = CURRENT_DEVICE.get();
         if (device != null) {
