@@ -7,8 +7,13 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum FieldsEnum {
 
-    LOGIN("login"),
-    PASSWORD("password");
+    LOGIN("Логин"),
+    PASSWORD("Пароль");
 
-    private final String name;
+    private final String displayName;
+
+    @Override
+    public String toString() {
+        return displayName;
+    }
 }

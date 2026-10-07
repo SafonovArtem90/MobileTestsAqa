@@ -17,3 +17,7 @@ allure-results
 # Ignore Mac DS_Store files
 .DS_Store
 **/.DS_Store
+
+# Локальные настройки и секреты
+src/test/resources/config-local.properties
+.env

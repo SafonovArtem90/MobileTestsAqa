@@ -1,32 +1,36 @@
 package base;
 
+import config.TestConfig;
+import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.pagefactory.AppiumFieldDecorator;
 import managers.DriverManager;
-import config.ConfigLoader;
 import org.openqa.selenium.support.PageFactory;
+import utils.DeviceActions;
+import utils.ElementActions;
 import utils.WaitUtils;
 
 import java.time.Duration;
 
-public abstract class BasePage implements Loadable {
+/**
+ * Базовый экран. При создании инициализирует элементы и ждёт загрузку экрана.
+ */
+public abstract class BasePage {
 
-    protected WaitUtils waitUtils;
-    protected utils.ElementActions elementActions;
-    protected utils.DeviceActions deviceActions;
+    protected final ElementActions elementActions;
+    protected final DeviceActions deviceActions;
 
-    public BasePage() {
-        PageFactory.initElements(new AppiumFieldDecorator(DriverManager.getDriver(), Duration.ZERO), this);
+    protected BasePage() {
+        AndroidDriver driver = DriverManager.getDriver();
+        PageFactory.initElements(new AppiumFieldDecorator(driver, Duration.ZERO), this);
 
-        this.waitUtils = new WaitUtils(DriverManager.getDriver(), Integer.parseInt(ConfigLoader.getProperty("explicit.wait")));
-        this.elementActions = new utils.ElementActions(waitUtils, DriverManager.getDriver());
-        this.deviceActions = new utils.DeviceActions(DriverManager.getDriver());
-        isLoaded();
+        WaitUtils waitUtils = new WaitUtils(driver, TestConfig.getExplicitWait());
+        this.elementActions = new ElementActions(waitUtils, driver);
+        this.deviceActions = new DeviceActions(driver);
+        waitForPageLoaded();
     }
 
-    @Override
-    public void isLoaded() {
-        checkPageLoaded();
-    }
-
-    protected abstract void checkPageLoaded();
+    /**
+     * Проверка, что экран открыт: ожидание ключевого элемента.
+     */
+    protected abstract void waitForPageLoaded();
 }

@@ -1,0 +1,5 @@
+# Шаблон локальных настроек. Скопируйте в config-local.properties (файл в .gitignore) и заполните.
+devices.udids=emulator-5554,emulator-5556
+
+test.user.login=
+test.user.password=

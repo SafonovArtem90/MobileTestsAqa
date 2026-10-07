@@ -4,15 +4,21 @@ import io.qameta.allure.Step;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class Assertions {
+public final class Assertions {
 
-    @Step("Проверка равенства строк {0} и {1}")
-    public static void assertTextEqual(String actual, String expected) {
+    private Assertions() {
+    }
+
+    @Step("Проверка: фактический текст «{actual}» равен ожидаемому «{expected}»")
+    public static void assertTextEquals(String actual, String expected) {
         assertThat(actual).as("Проверка текста").isEqualTo(expected);
     }
 
-    @Step("Проверка условия {0} для {1}")
-    public static void assertTrue(boolean condition, String message) {
-        assertThat(condition).as(message).isTrue();
+    @Step("Проверка: «{actual}» соответствует шаблону «{regex}»")
+    public static void assertMatchesRegex(String actual, String regex) {
+        assertThat(actual)
+                .as("Значение '%s' не соответствует шаблону '%s'", actual, regex)
+                .isNotNull()
+                .matches(regex);
     }
 }

@@ -1,0 +1,33 @@
+# Локальный и CI-запуск: эмулятор Android + контейнер с тестами.
+#   docker compose up --build --exit-code-from tests --abort-on-container-exit
+# Эмулятору нужна аппаратная виртуализация (/dev/kvm): работает на Linux, в том числе на GitHub Actions ubuntu-latest.
+# На macOS KVM нет — там запускайте тесты на локальном эмуляторе без Docker или подключайте внешнее устройство через ADB_CONNECT.
+services:
+  emulator:
+    image: budtmo/docker-android:emulator_13.0
+    devices:
+      - /dev/kvm
+    environment:
+      EMULATOR_DEVICE: "Samsung Galaxy S10"
+      WEB_VNC: "true"
+    ports:
+      - "6080:6080" # просмотр экрана эмулятора в браузере: http://localhost:6080
+
+  tests:
+    build: .
+    depends_on:
+      - emulator
+    environment:
+      ENV: ci
+      ADB_CONNECT: emulator:5555
+      DEVICES_UDIDS: emulator:5555
+      THREADS: "1"
+      INCLUDE_TAGS: ${INCLUDE_TAGS:-}
+      TEST_USER_LOGIN: ${TEST_USER_LOGIN:?Задайте TEST_USER_LOGIN}
+      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:?Задайте TEST_USER_PASSWORD}
+      # APK по умолчанию берётся из ресурсов, которые попадают в образ при сборке.
+      # Чтобы взять внешний файл, раскомментируйте APP_PATH и том ./apps ниже.
+      # APP_PATH: /apps/app-debug.apk
+    volumes:
+      - ./build/allure-results:/app/build/allure-results
+      # - ./apps:/apps:ro
