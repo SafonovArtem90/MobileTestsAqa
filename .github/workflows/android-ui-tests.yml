@@ -98,7 +98,7 @@ jobs:
           retention-days: 14
 
       - name: Публикация отчёта Allure на GitHub Pages
-        if: hashFiles('build/reports/allure-report/allureReport/index.html') != ''
+        if: always() && hashFiles('build/reports/allure-report/allureReport/index.html') != ''
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
