@@ -41,6 +41,12 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || '' }}
 
+      - name: Установка JDK для отчёта Allure и тестов
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
       # Эмулятору в Docker нужен доступ к /dev/kvm
       - name: Включение KVM
         run: |
@@ -55,23 +61,40 @@ jobs:
           mkdir -p src/test/resources/apps
           curl -fsSL -o src/test/resources/apps/app-debug.apk "$APP_DOWNLOAD_URL"
 
-      - name: Запуск тестов в Docker
-        run: docker compose up --build --exit-code-from tests --abort-on-container-exit
+      - name: Appium Server и драйвер
+        run: |
+          npm install -g appium@2
+          appium driver install uiautomator2@4.2.8
 
-      - name: Логи эмулятора при падении
-        if: failure()
-        run: docker compose logs emulator --tail 200
+      - name: Подготовка AVD
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "system-images;android-35;google_apis;x86_64" "emulator"
+          echo "no" | avdmanager create avd -n test -k "system-images;android-35;google_apis;x86_64" -d "pixel_6" -f
 
-      - name: Остановка контейнеров
+      - name: Запуск эмулятора и ожидание завершения загрузки
+        run: |
+          emulator -avd test -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+          for i in $(seq 1 60); do
+            completed="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
+            if [ "$completed" = "1" ]; then
+              echo "Эмулятор загрузился"
+              break
+            fi
+            echo "Ожидание загрузки эмулятора... ($i/60)"
+            sleep 10
+          done
+          adb devices
+
+      - name: Запуск тестов
+        env:
+          ENV: ci
+          DEVICES_UDIDS: emulator-5554
+          THREADS: "1"
+        run: ./gradlew test --no-daemon
+
+      - name: Остановка эмулятора
         if: always()
-        run: docker compose down -v
-
-      - name: Установка JDK для отчёта Allure
-        if: always()
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "17"
+        run: pkill -f emulator || true
 
       - name: Подготовка истории прогонов
         if: always()
