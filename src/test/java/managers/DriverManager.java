@@ -66,7 +66,6 @@ public final class DriverManager {
         options.setSystemPort(device.systemPort());
         options.setNewCommandTimeout(TestConfig.getNewCommandTimeout());
         options.setAutoGrantPermissions(true);
-        // Приложение устанавливается и запускается в AppManager, поэтому сессия создаётся без app/appPackage.
         options.setNoReset(true);
         return options;
     }

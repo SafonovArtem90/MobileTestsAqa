@@ -20,11 +20,6 @@ public abstract class BaseAndroidTest {
 
     @BeforeEach
     public void startSession() {
-        DriverManager.getDriver();
-    }
-
-    @BeforeEach
-    public void restartApp() {
         AppManager.resetApp(DriverManager.getDriver());
     }
 }
