@@ -1,7 +1,7 @@
 name: Android UI tests
 
 on:
-  # Только ручной запуск: Actions → Android UI tests → Run workflow
+  # Ручной запуск: Actions → Android UI tests → Run workflow
   workflow_dispatch:
     inputs:
       include_tags:
@@ -12,6 +12,12 @@ on:
         description: "Ветка для запуска (например, refactoring)"
         required: true
         default: "refactoring"
+
+  # Запуск тестов при создании/переоткрытии PR в master.
+  # Типы opened/reopened, без synchronize — последующие пуши в PR не запускают тесты.
+  pull_request:
+    types: [ opened, reopened ]
+    branches: [ master ]
 
 concurrency:
   group: android-ui-tests-${{ github.ref }}
@@ -31,7 +37,7 @@ jobs:
       - name: Получение кода
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || '' }}
 
       # Эмулятору в Docker нужен доступ к /dev/kvm
       - name: Включение KVM
