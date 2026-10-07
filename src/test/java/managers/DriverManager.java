@@ -52,7 +52,7 @@ public final class DriverManager {
             AndroidDriver driver = new AndroidDriver(AppiumServerManager.getServerUrl(), options);
             DRIVER_THREAD_LOCAL.set(driver);
             log.info("Сессия Appium создана на устройстве {}", device.udid());
-            AppManager.prepareApp(driver);
+            AppManager.prepareApp(driver, device);
         } catch (RuntimeException e) {
             quitDriver();
             throw new IllegalStateException(String.format("Не удалось подготовить сессию на устройстве %s", device.udid()), e);

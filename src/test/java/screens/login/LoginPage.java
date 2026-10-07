@@ -11,30 +11,30 @@ import static io.qameta.allure.model.Parameter.Mode.MASKED;
 
 public class LoginPage extends BasePage {
 
-    @AndroidFindBy(id = "tvTitle")
+    @AndroidFindBy(id = "com.alfabank.qapp:id/tvTitle")
     private WebElement title;
 
-    @AndroidFindBy(id = "etUsername")
+    @AndroidFindBy(id = "com.alfabank.qapp:id/etUsername")
     private WebElement loginInput;
 
-    @AndroidFindBy(id = "etPassword")
+    @AndroidFindBy(id = "com.alfabank.qapp:id/etPassword")
     private WebElement passwordInput;
 
     @AndroidFindBy(accessibility = "Show password")
     private WebElement showPasswordIcon;
 
-    @AndroidFindBy(id = "btnConfirm")
+    @AndroidFindBy(id = "com.alfabank.qapp:id/btnConfirm")
     private WebElement confirmButton;
 
-    @AndroidFindBy(id = "tvError")
+    @AndroidFindBy(id = "com.alfabank.qapp:id/tvError")
     private WebElement errorAfterSubmit;
 
     // Локатор временный: уточнить id ошибки под полем Логин в приложении.
-    @AndroidFindBy(id = "anyIdFromInvalidValue")
+    @AndroidFindBy(id = "com.alfabank.qapp:id/anyIdFromInvalidValue")
     private WebElement loginFieldError;
 
     // Локатор временный: уточнить id ошибки под полем Пароль в приложении.
-    @AndroidFindBy(id = "anyIdFromInvalidValue")
+    @AndroidFindBy(id = "com.alfabank.qapp:id/anyIdFromInvalidValue")
     private WebElement passwordFieldError;
 
     @Override

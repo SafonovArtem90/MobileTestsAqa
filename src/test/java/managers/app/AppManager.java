@@ -4,6 +4,7 @@ import config.TestConfig;
 import io.appium.java_client.android.AndroidDriver;
 import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
+import managers.Device;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -25,7 +26,7 @@ public final class AppManager {
     }
 
     @Step("Подготовка приложения на устройстве")
-    public static void prepareApp(AndroidDriver driver) {
+    public static void prepareApp(AndroidDriver driver, Device device) {
         String appPackage = TestConfig.getAppPackage();
         if (driver.isAppInstalled(appPackage)) {
             log.info("Приложение {} уже установлено", appPackage);
@@ -34,10 +35,53 @@ public final class AppManager {
         }
 
         if (TestConfig.isAppResetBeforeTest()) {
+            // 1. Закрываем приложение, если оно открыто (например, осталось с прошлого запуска)
             driver.terminateApp(appPackage);
+            // 2. Чистим данные и кэш через Appium
             driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
+            // 3. Дублируем через adb pm clear — заодно сбрасываются выданные разрешения
+            clearAppDataViaAdb(appPackage, device.udid());
         }
         driver.activateApp(appPackage);
+    }
+
+    private static void clearAppDataViaAdb(String appPackage, String udid) {
+        try {
+            List<String> cmd = new java.util.ArrayList<>();
+            cmd.add("adb");
+            if (udid != null && !udid.isBlank()) {
+                cmd.add("-s");
+                cmd.add(udid);
+            }
+            cmd.add("shell");
+            cmd.add("pm");
+            cmd.add("clear");
+            cmd.add(appPackage);
+            Process process = new ProcessBuilder(cmd).start();
+            process.getInputStream().transferTo(System.out);
+            process.waitFor();
+        } catch (Exception e) {
+            log.warn("Не удалось выполнить pm clear для {}", appPackage, e);
+        }
+    }
+
+    public static void resetApp(AndroidDriver driver) {
+        String appPackage = TestConfig.getAppPackage();
+        if (TestConfig.isAppResetBeforeTest()) {
+            driver.terminateApp(appPackage);
+            driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
+            clearAppDataViaAdb(appPackage, getUdid(driver));
+        }
+        driver.activateApp(appPackage);
+    }
+
+    private static String getUdid(AndroidDriver driver) {
+        try {
+            return (String) driver.getCapabilities().getCapability("udid");
+        } catch (Exception e) {
+            log.warn("Не удалось определить udid драйвера", e);
+            return "";
+        }
     }
 
     private static void installApp(AndroidDriver driver, String appPackage) {
