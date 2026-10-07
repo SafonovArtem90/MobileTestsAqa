@@ -29,6 +29,9 @@ jobs:
     timeout-minutes: 60
     env:
       APP_DOWNLOAD_URL: ${{ secrets.APP_DOWNLOAD_URL }}
+      TEST_USER_LOGIN: ${{ secrets.TEST_USER_LOGIN }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      INCLUDE_TAGS: ${{ github.event.inputs.include_tags }}
 
     steps:
       - name: Получение кода
@@ -51,10 +54,6 @@ jobs:
           curl -fsSL -o src/test/resources/apps/app-debug.apk "$APP_DOWNLOAD_URL"
 
       - name: Запуск тестов в Docker
-        env:
-          TEST_USER_LOGIN: ${{ secrets.TEST_USER_LOGIN }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-          INCLUDE_TAGS: ${{ github.event.inputs.include_tags }}
         run: docker compose up --build --exit-code-from tests --abort-on-container-exit
 
       - name: Логи эмулятора при падении
