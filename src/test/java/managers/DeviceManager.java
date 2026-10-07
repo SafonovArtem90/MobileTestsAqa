@@ -45,9 +45,31 @@ public final class DeviceManager {
 
     /**
      * Список устройств, с которыми установлено соединение (статус device в adb).
-     * Если adb недоступен — используется полный список из конфига (поведение по умолчанию).
+     * Опрашивает adb несколько раз с паузой, потому что при старте эмулятора
+     * устройство может некоторое время отображаться как offline.
+     * Если adb недоступен или ничего не вернул — откатывается к списку из конфига.
      */
     private static List<String> getConnectedDevices() {
+        for (int attempt = 1; attempt <= 6; attempt++) {
+            List<String> devices = queryAdb();
+            log.info("Подключённые устройства (adb), попытка {}: {}", attempt, devices);
+            if (!devices.isEmpty()) {
+                return devices;
+            }
+            if (attempt < 6) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+        log.warn("adb devices не вернул устройств за 30 секунд, используем список из конфига: {}", TestConfig.getDeviceUdids());
+        return TestConfig.getDeviceUdids();
+    }
+
+    private static List<String> queryAdb() {
         try {
             Process process = new ProcessBuilder("adb", "devices").start();
             List<String> devices = process.getInputStream().readAllBytes()
@@ -59,11 +81,10 @@ public final class DeviceManager {
                                           .map(parts -> parts[0])
                                           .toList();
             process.waitFor();
-            log.info("Подключённые устройства (adb): {}", devices);
             return devices;
         } catch (Exception e) {
-            log.warn("Не удалось получить список устройств через adb, используем список из конфига", e);
-            return TestConfig.getDeviceUdids();
+            log.warn("Не удалось опросить adb", e);
+            return List.of();
         }
     }
 
