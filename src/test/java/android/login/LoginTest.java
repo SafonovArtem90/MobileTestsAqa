@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import screens.login.LoginPage;
-import screens.login.SuccessLoginPage;
+import screens.login.LoginScenario;
 
 import java.util.Locale;
 import java.util.stream.Stream;
@@ -35,99 +34,53 @@ public class LoginTest extends BaseAndroidTest {
     @Test
     @DisplayName("Успешный вход в приложение")
     public void checkSuccessLoginTest() {
-        LoginPage loginPage = new LoginPage();
-        loginPage.waitShowPasswordIconVisible();
-        loginPage.waitShowPasswordIconChecked(false);
+        LoginScenario scenario = new LoginScenario();
 
-        loginPage.enterLogin(TestConfig.getUserLogin());
-        loginPage.enterPassword(TestConfig.getUserPassword());
-        loginPage.waitPasswordHidden(true);
-        loginPage.clickLoginButton();
-
-        SuccessLoginPage successLoginPage = new SuccessLoginPage();
-        assertTextEquals(successLoginPage.getSuccessText(), SUCCESS_LOGIN_TEXT);
+        assertTextEquals(scenario.loginSuccessfully(TestConfig.getUserLogin(), TestConfig.getUserPassword()), SUCCESS_LOGIN_TEXT);
     }
 
     @ParameterizedTest(name = "Невалидный логин: «{0}»")
     @DisplayName("Валидация поля Логин")
     @MethodSource("invalidLogins")
     public void checkValidationLoginFieldTest(String login) {
-        LoginPage loginPage = new LoginPage();
-        loginPage.waitShowPasswordIconVisible();
-        loginPage.waitShowPasswordIconChecked(false);
+        LoginScenario scenario = new LoginScenario();
 
-        loginPage.enterLogin(login);
-
-        assertTextEquals(loginPage.getLoginFieldErrorText(), ERROR_LOGIN_INVALID_SYMBOLS);
+        assertTextEquals(scenario.getLoginFieldError(login), ERROR_LOGIN_INVALID_SYMBOLS);
     }
 
     @ParameterizedTest(name = "Невалидный пароль длиной {0} символов, ошибка: «{2}»")
     @DisplayName("Валидация длины поля Пароль")
     @MethodSource("invalidPasswords")
     public void checkValidationPasswordFieldTest(int length, String password, String expectedError) {
-        LoginPage loginPage = new LoginPage();
-        loginPage.waitShowPasswordIconVisible();
-        loginPage.waitShowPasswordIconChecked(false);
+        LoginScenario scenario = new LoginScenario();
 
-        loginPage.enterLogin(TestConfig.getUserLogin());
-        loginPage.enterPassword(password);
-        loginPage.waitPasswordHidden(true);
-
-        assertTextEquals(loginPage.getPasswordFieldErrorText(), expectedError);
+        assertTextEquals(scenario.getPasswordFieldError(TestConfig.getUserLogin(), password), expectedError);
     }
 
     @ParameterizedTest(name = "Неверная пара логин/пароль: {0}")
     @DisplayName("Ошибка при входе с неверными учётными данными")
     @MethodSource("invalidCredentials")
     public void checkFailLoginTest(String caseName, String login, String password) {
-        LoginPage loginPage = new LoginPage();
-        loginPage.waitShowPasswordIconVisible();
-        loginPage.waitShowPasswordIconChecked(false);
+        LoginScenario scenario = new LoginScenario();
 
-        loginPage.enterLogin(login);
-        loginPage.enterPassword(password);
-        loginPage.waitPasswordHidden(true);
-        loginPage.clickLoginButton();
-
-        assertTextEquals(loginPage.getErrorAfterSubmitText(), ERROR_LOGIN_OR_PASSWORD_TEXT);
+        assertTextEquals(scenario.getErrorAfterSubmit(login, password), ERROR_LOGIN_OR_PASSWORD_TEXT);
     }
 
     @Test
     @DisplayName("Скрытие и отображение значения поля Пароль")
     public void checkViewHiddenAndVisiblePasswordTest() {
-        LoginPage loginPage = new LoginPage();
-        loginPage.waitShowPasswordIconVisible();
-        loginPage.waitShowPasswordIconChecked(false);
+        LoginScenario scenario = new LoginScenario();
 
-        loginPage.enterPassword(TestConfig.getUserPassword());
-        loginPage.waitPasswordHidden(true);
-
-        loginPage.clickShowPasswordIcon();
-
-        loginPage.waitPasswordHidden(false);
-        loginPage.waitShowPasswordIconChecked(true);
+        scenario.togglePasswordVisibility(TestConfig.getUserPassword());
     }
 
     @ParameterizedTest(name = "Поле {0}: вставка значения «{1}»")
     @DisplayName("Удаление недопустимых символов после вставки из буфера обмена")
     @MethodSource("valuesWithInvalidCharacters")
     public void checkRemoveInvalidSymbolsAfterPasteTest(FieldsEnum field, String value, String regex) {
-        LoginPage loginPage = new LoginPage();
-        loginPage.waitShowPasswordIconVisible();
-        loginPage.waitShowPasswordIconChecked(false);
+        LoginScenario scenario = new LoginScenario();
 
-        String actualValue = switch (field) {
-            case LOGIN -> {
-                loginPage.pasteLogin(value);
-                yield loginPage.getLoginValue();
-            }
-            case PASSWORD -> {
-                loginPage.pastePassword(value);
-                yield loginPage.getPasswordValue();
-            }
-        };
-
-        assertMatchesRegex(actualValue, regex);
+        assertMatchesRegex(scenario.pasteValue(field, value), regex);
     }
 
     static Stream<Arguments> valuesWithInvalidCharacters() {
