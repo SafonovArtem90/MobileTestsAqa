@@ -91,6 +91,8 @@ test {
     testLogging {
         events 'passed', 'skipped', 'failed'
         exceptionFormat = 'full'
+        // Показывать System.out/System.err тестов в логах CI (нужно для диагностики)
+        showStandardStreams = true
     }
 
     // Тесты зависят от устройства, а не только от кода — не берём результат из кеша

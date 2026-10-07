@@ -26,9 +26,12 @@ public class FailureAttachmentsExtension implements AfterTestExecutionCallback {
 
     private void attachArtifacts(AndroidDriver driver) {
         try {
+            String pageSource = driver.getPageSource();
+            // Дублируем дерево экрана в System.out, чтобы при отладке CI не нужен был отчёт
+            System.out.println("PAGE SOURCE при падении:\n" + pageSource);
             Allure.addAttachment("Скриншот при падении", "image/png",
                                  new ByteArrayInputStream(driver.getScreenshotAs(OutputType.BYTES)), ".png");
-            Allure.addAttachment("Дерево элементов экрана", "text/xml", driver.getPageSource(), ".xml");
+            Allure.addAttachment("Дерево элементов экрана", "text/xml", pageSource, ".xml");
         } catch (RuntimeException e) {
             log.warn("Не удалось приложить материалы к отчёту", e);
         }
