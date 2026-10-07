@@ -28,6 +28,7 @@ public final class AppManager {
     @Step("Подготовка приложения на устройстве")
     public static void prepareApp(AndroidDriver driver, Device device) {
         String appPackage = TestConfig.getAppPackage();
+        dismissSysUiAnr(driver);
         if (driver.isAppInstalled(appPackage)) {
             log.info("Приложение {} уже установлено", appPackage);
         } else {
@@ -67,6 +68,7 @@ public final class AppManager {
 
     public static void resetApp(AndroidDriver driver) {
         String appPackage = TestConfig.getAppPackage();
+        dismissSysUiAnr(driver);
         if (TestConfig.isAppResetBeforeTest()) {
             driver.terminateApp(appPackage);
             driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
@@ -81,6 +83,18 @@ public final class AppManager {
         } catch (Exception e) {
             log.warn("Не удалось определить udid драйвера", e);
             return "";
+        }
+    }
+
+    private static void dismissSysUiAnr(AndroidDriver driver) {
+        try {
+            String source = driver.getPageSource();
+            if (source.contains("System UI isn't responding") || source.contains("Системный интерфейс не отвечает")) {
+                driver.findElement(org.openqa.selenium.By.id("android:id/aerr_wait")).click();
+                log.warn("Дисмисован диалог System UI isn't responding кнопкой Wait");
+            }
+        } catch (Exception e) {
+            log.warn("Не удалось обработать диалог System UI", e);
         }
     }
 

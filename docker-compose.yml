@@ -10,6 +10,8 @@ services:
     environment:
       EMULATOR_DEVICE: "Samsung Galaxy S10"
       WEB_VNC: "true"
+      # В ci-стаке без GPU-ускорения System UI часто показывает ANR-диалог
+      EMULATOR_ARGS: "-no-boot-anim -no-audio -camera-back none -gpu swiftshader_indirect"
     ports:
       - "6080:6080" # просмотр экрана эмулятора в браузере: http://localhost:6080
 
