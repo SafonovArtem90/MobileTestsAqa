@@ -98,7 +98,8 @@ public final class DeviceManager {
         return CURRENT_DEVICE.get();
     }
 
-    public static void releaseDevice() {        Device device = CURRENT_DEVICE.get();
+    public static void releaseDevice() {
+        Device device = CURRENT_DEVICE.get();
         if (device != null) {
             CURRENT_DEVICE.remove();
             DEVICES.add(device);
