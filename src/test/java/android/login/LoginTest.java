@@ -35,7 +35,6 @@ public class LoginTest extends BaseAndroidTest {
     @DisplayName("Успешный вход в приложение")
     public void checkSuccessLoginTest() {
         LoginScenario scenario = new LoginScenario();
-
         assertTextEquals(scenario.loginSuccessfully(TestConfig.getUserLogin(), TestConfig.getUserPassword()), SUCCESS_LOGIN_TEXT);
     }
 
@@ -44,7 +43,6 @@ public class LoginTest extends BaseAndroidTest {
     @MethodSource("invalidLogins")
     public void checkValidationLoginFieldTest(String login) {
         LoginScenario scenario = new LoginScenario();
-
         assertTextEquals(scenario.getLoginFieldError(login), ERROR_LOGIN_INVALID_SYMBOLS);
     }
 
@@ -53,7 +51,6 @@ public class LoginTest extends BaseAndroidTest {
     @MethodSource("invalidPasswords")
     public void checkValidationPasswordFieldTest(int length, String password, String expectedError) {
         LoginScenario scenario = new LoginScenario();
-
         assertTextEquals(scenario.getPasswordFieldError(TestConfig.getUserLogin(), password), expectedError);
     }
 
@@ -62,7 +59,6 @@ public class LoginTest extends BaseAndroidTest {
     @MethodSource("invalidCredentials")
     public void checkFailLoginTest(String caseName, String login, String password) {
         LoginScenario scenario = new LoginScenario();
-
         assertTextEquals(scenario.getErrorAfterSubmit(login, password), ERROR_LOGIN_OR_PASSWORD_TEXT);
     }
 
@@ -70,7 +66,6 @@ public class LoginTest extends BaseAndroidTest {
     @DisplayName("Скрытие и отображение значения поля Пароль")
     public void checkViewHiddenAndVisiblePasswordTest() {
         LoginScenario scenario = new LoginScenario();
-
         scenario.togglePasswordVisibility(TestConfig.getUserPassword());
     }
 
@@ -79,7 +74,6 @@ public class LoginTest extends BaseAndroidTest {
     @MethodSource("valuesWithInvalidCharacters")
     public void checkRemoveInvalidSymbolsAfterPasteTest(FieldsEnum field, String value, String regex) {
         LoginScenario scenario = new LoginScenario();
-
         assertMatchesRegex(scenario.pasteValue(field, value), regex);
     }
 
